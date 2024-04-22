@@ -1,5 +1,6 @@
 library(tidyverse)
 library(plotly)
+library(magrittr)
 
 d1 <- function(x, t) {
   (log(x / K) + (r + 0.5 * v_sqrd) * (t_star - t)) / (sqrt(v_sqrd * (t_star - t)))
