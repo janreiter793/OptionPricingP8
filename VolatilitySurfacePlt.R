@@ -7,8 +7,8 @@ library(quantmod)
 library(plotly)
 
 # Parameters
-address         <- "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/WebSnapshots_SP500_optionsChains/" # Address for the options chain of SP500
-path.data       <- "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/SP500_data.csv" # Path to data with options
+address         <- ".../WebSnapshots_SP500_optionsChains/" # Address for the options chain of SP500
+path.data       <- ".../SP500_data.csv" # Path to data with options
 load.from.file <- TRUE # If true, then data is loaded from path.data. If false, then
                         # data is downloaded from polygon.io for each symbol in address.
                         # Note, if true, then address parameter is unused.
