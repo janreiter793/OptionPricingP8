@@ -6,9 +6,10 @@ library(magrittr)
 files <- c("~/data/AMZN_options.csv",
            "~/data/BRK-B_options.csv",
            "~/data/GOOG_options.csv",
-           "~/data/GOOGL_options.csv")
+           "~/data/GOOGL_options.csv",
+           "~/data/TSLA_options.csv")
 r    <- 0.01711 # US treasury bond yield length one year minus inflation rate as
-              # of 29-04-2024.
+                # of 29-04-2024.
 
 # Takes an option symbol and returns the associated underlying asset symbol
 getUnderlyingSymbol <- function(symbol) {
@@ -54,12 +55,33 @@ convertToDate <- function(symbol) {
     return
 }
 
+# Detect if symbol is put
+isPut <- function(symbols) {
+  res <- symbols %>% length %>% logical
+
+  for(i in 1:length(symbols)) {
+    if(substr(symbols[i], nchar(symbols[i]) - 8, nchar(symbols[i]) - 8) == "P") {
+      res[i] <- TRUE
+    } else {
+      res[i] <- FALSE
+    }
+  }
+
+  return(res)
+}
+
+# Uses the put call parity to convert put price to call price
+putToCall <- function(p, K, r, tau, x) {
+  return(p - K * exp(-r * tau) + x)
+}
+
 # Takes a file address, where option opening prices are stored, and returns the
-# Black and Scholes RMSE and MAE.
+# Black and Scholes RMSE, MAE, and mean open price (MEAN).
 obtainBSMetrics <- function(file) {
   # Load the data and count for each date the amount of rows where we have avail-
   # able open prices for the options
   data <- read.csv(file)
+
   count.data.for.dates <-
     data %>%
     group_by(date) %>%
@@ -98,6 +120,16 @@ obtainBSMetrics <- function(file) {
     cbind(vol, r) %>%
     mutate(tau = TTM(convertToDate(symbol), date) / 52560)
 
+  # Convert open prices for put to call prices
+  data %<>%
+    mutate(open.x = ifelse(isPut(symbol),
+                           putToCall(open.x,
+                                     getStrikePrice(symbol),
+                                     r,
+                                     tau,
+                                     open.y),
+                           open.x))
+
   # Calculate the BS-prices
   BS_prices <-
     data %>%
@@ -121,7 +153,9 @@ obtainBSMetrics <- function(file) {
 
   RMSE <- sqrt(sum.sqrd.errors / nrow(BS_prices))
 
-  return(c(RMSE, MAE))
+  MEAN <- mean(data$open.x)
+
+  return(c(RMSE, MAE, MEAN))
 }
 
 # Obtain and store the metrics
@@ -138,9 +172,10 @@ for(file in files) {
 }
 
 # Create a neat data frame displaying the results
-results <- data.frame(RMSE = metrics[1:4 * 2 - 1],
-                      MAE  = metrics[1:4 * 2])
-rownames(results) <- c("AMZN", "BRK-B", "GOOG", "GOOGL")
+results <- data.frame(RMSE = metrics[1:n * 3 - 2],
+                      MAE  = metrics[1:n * 3 - 1],
+                      MEAN = metrics[1:n * 3])
+rownames(results) <- c("AMZN", "BRK-B", "GOOG", "GOOGL", "TSLA")
 
 # The results
 results %>% print
