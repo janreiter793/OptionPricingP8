@@ -3,11 +3,11 @@ library(tidyquant)
 library(magrittr)
 
 # Parameters
-files <- c("C:/Users/janre/Documents/uni/8. Semester/Projekt/data/AMZN_options.csv",
-           "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/BRK-B_options.csv",
-           "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/GOOG_options.csv",
-           "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/GOOGL_options.csv",
-           "C:/Users/janre/Documents/uni/8. Semester/Projekt/data/TSLA_options.csv")
+files <- c("~/data/AMZN_options.csv",
+           "~/data/BRK-B_options.csv",
+           "~/data/GOOG_options.csv",
+           "~/data/GOOGL_options.csv",
+           "~/data/TSLA_options.csv")
 r    <- 0.01711 # US treasury bond yield length one year minus inflation rate as
                 # of 29-04-2024.
 
