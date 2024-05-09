@@ -6,11 +6,11 @@ library(future.apply)
 # Parameters
 r          <- 0.01711 # US treasury bond yield length one year minus inflation rate as
 # of 29-04-2024.
-files <- c("~/data/AMZN_options.csv",
-           "~/data/BRK-B_options.csv",
-           "~/data/GOOG_options.csv",
-           "~/data/GOOGL_options.csv",
-           "~/data/TSLA_options.csv")
+files <- c("/srv/scratch/jrsa20/P8-Projekt/data/AMZN_options.csv",
+           "/srv/scratch/jrsa20/P8-Projekt/data/BRK-B_options.csv",
+           "/srv/scratch/jrsa20/P8-Projekt/data/GOOG_options.csv",
+           "/srv/scratch/jrsa20/P8-Projekt/data/GOOGL_options.csv",
+           "/srv/scratch/jrsa20/P8-Projekt/data/TSLA_options.csv")
 alpha = 1.5
 
 # Takes an option symbol and returns the associated underlying asset symbol
@@ -176,9 +176,9 @@ obtainHestonMetrics <- function(N, file) {
   # For all maturity times and all prices find the error
   ErrorFunction <- function(params, minimize = T) {
     sigma_0_sqrd <- abs(params[1])
-    kappa <- params[2]
-    eta <- params[3]
-    theta <- params[4]
+    kappa <- abs(params[2])
+    eta <- abs(params[3])
+    theta <- abs(params[4])
     rho <- params[5] / (1 + abs(params[5]))
     
     surface <- optionSurface(sigma_0_sqrd, kappa, eta, theta, rho)
@@ -214,7 +214,7 @@ obtainHestonMetrics <- function(N, file) {
                ))
   
   transformed_parameters <- res$par
-  transformed_parameters[1] %<>%  abs
+  transformed_parameters[1:4] %<>%  abs
   transformed_parameters[5] %<>% {. / (1 + abs(.))}
   return(c(ErrorFunction(res$par, minimize = F)))
 }
@@ -226,4 +226,12 @@ for(i in 1:length(N)) {
   plan(multisession(workers = 5))
   res[[i]] <- future_lapply(files, obtainHestonMetrics, N = N[i])
   cat("\nDone!\n")
+}
+
+pres <- res
+means <- c(31.40280, 44.67244, 40.07082, 39.74017, 29.38004)
+for(i in 1:length(pres)) {
+  for(j in 1:length(files)) {
+    pres[[i]][[j]] <- pres[[i]][[j]] / means[j] * 100
+  }
 }
