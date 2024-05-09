@@ -189,7 +189,12 @@ obtainHestonMetrics <- function(N, file) {
       {err/nrow(data)} %>% return
     } else {
       err_abs <- {abs(data$open - C)} %>% sum
-      c(RMSE = sqrt(err/nrow(data)), MAE = err_abs / nrow(data)) %>% return
+      MEAN = mean(data$open)
+      RMSE = sqrt(err/nrow(data))
+      MAE = err_abs / nrow(data)
+      c(RMSE = RMSE, MAE = MAE, 
+        pRMSE = RMSE / MEAN * 100,
+        pMAE = MAE / MEAN * 100) %>% return
     }
   }
   
@@ -216,7 +221,10 @@ obtainHestonMetrics <- function(N, file) {
   transformed_parameters <- res$par
   transformed_parameters[1:4] %<>%  abs
   transformed_parameters[5] %<>% {. / (1 + abs(.))}
-  return(c(ErrorFunction(res$par, minimize = F)))
+  return(list(ErrorFunction(res$par, minimize = F), 
+                transformed_parameters
+              )
+         )
 }
 
 N <- 2^(8:16)
@@ -228,10 +236,28 @@ for(i in 1:length(N)) {
   cat("\nDone!\n")
 }
 
-pres <- res
-means <- c(31.40280, 44.67244, 40.07082, 39.74017, 29.38004)
-for(i in 1:length(pres)) {
+conclusion_N <- matrix(nrow = length(files) * 2, ncol = length(N))
+for(i in 1:length(N)) {
   for(j in 1:length(files)) {
-    pres[[i]][[j]] <- pres[[i]][[j]] / means[j] * 100
+    conclusion_N[1:2 + 2 * (j - 1), i] <- res[[i]][[j]][[1]][3:4] 
   }
 }
+ 
+conclusion <- list()
+rownames(conclusion_N) <- c("AMZN.pRMSE", "AMZN.pMAE", "BRK-B.pRMSE", "BRK-B.pMAE", "GOOG.pRMSE", 
+           "GOOG.pMAE", "GOOGL.pRMSE", "GOOGL.pMAE", "TSLA.pRMSE", "TSLA.pMAE")
+colnames(conclusion_N) <- sapply(8:16, function(x) {paste0("N=2^", x)})
+conclusion[[1]] <- conclusion_N
+
+for(i in 1:length(N)) {
+  temp_df <- data.frame()
+  temp <- res[[i]] %>% lapply(function(x) {c(x[[1]], x[[2]])} )
+  for(row in temp) {
+    temp_df %<>% rbind(row)
+  }
+  colnames(temp_df) <- c("RMSE", "MAE", "pRMSE", "pMAE", "sigma_0_sqrd", 
+                         "kappa", "eta", "theta", "rho")
+  rownames(temp_df) <- c("AMZN", "BRK-B", "GOOG", "GOOGL","TSLA")
+  conclusion[[i + 1]] <- temp_df
+}
+conclusion
