@@ -7,13 +7,11 @@ library(RQuantLib)
 # Parameters
 r          <- 0.01711 # US treasury bond yield length one year minus inflation rate as
 # of 29-04-2024.
-files <- c("/srv/scratch/jrsa20/P8-Projekt/data/AMZN_options.csv",
-           "/srv/scratch/jrsa20/P8-Projekt/data/BRK-B_options.csv",
-           "/srv/scratch/jrsa20/P8-Projekt/data/GOOG_options.csv",
-           "/srv/scratch/jrsa20/P8-Projekt/data/GOOGL_options.csv",
-           "/srv/scratch/jrsa20/P8-Projekt/data/TSLA_options.csv")
-names <- c('AMZN', 'BRK-B', 'GOOG', 'GOOGL', 'TSLA')
-foldername <- "test"
+files <- c("~/data/AMZN_options.csv",
+           "~/data/BRK-B_options.csv",
+           "~/data/GOOG_options.csv",
+           "~/data/GOOGL_options.csv",
+           "~/data/TSLA_options.csv")
 
 # Takes an option symbol and returns the associated underlying asset symbol
 getUnderlyingSymbol <- function(symbol) {
