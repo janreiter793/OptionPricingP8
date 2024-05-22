@@ -27,7 +27,8 @@ df <- expand.grid(x, t)
 colnames(df) <- c("x", "t")
 df %<>% mutate(C = C(x, t))
 
-C <- xtabs(C ~ x + t, data = df)
+C <- xtabs(C ~ t + x, data = df)
+
 # Plot the points in surface plot
 plot_ly(x = ~x, y = ~t, z = ~C, type = "surface") %>% layout(
   scene = list(
