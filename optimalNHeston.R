@@ -159,15 +159,9 @@ obtainHestonMetrics <- function(N, file) {
   
   # Calculates the option surface based on parameters
   optionSurface <- function(sigma_0_sqrd, kappa, eta, theta, rho) {
-    #cat(paste("Calculating option surface using parameters:", "\n",
-    #          "sigma_0_sqrd =", sigma_0_sqrd, "\n",
-    #          "kappa =", kappa, "\n",
-    #          "eta =", eta, "\n",
-    #          "theta =", theta, "\n",
-    #          "rho =", rho,  "\n"))
     surface <- matrix(nrow = length(maturity.times), ncol = N)
     for(i in 1:length(maturity.times)) {
-      surface[i,] <- abs(exp(-alpha * k) / pi * fft(x(sigma_0_sqrd, kappa, eta,
+      surface[i,] <- Re(exp(-alpha * k) / pi * fft(x(sigma_0_sqrd, kappa, eta,
                                                       theta, rho, maturity.times[i])))
     }
     return(surface)
@@ -209,7 +203,7 @@ obtainHestonMetrics <- function(N, file) {
   closest.strike.index <- data %>% nrow %>% numeric
   for(i in 1:nrow(data)) {
     closest.maturity.index[i] <- which(maturity.times == data$tau[i])
-    closest.strike.index[i] <- which.min(abs(k - log(data$strike[i])))
+    closest.strike.index[i] <- which.min(abs(exp(k) - data$strike[i]))
   }
   
   res <- optim(initial_params, ErrorFunction, method = "SANN",
@@ -234,6 +228,7 @@ for(i in 1:length(N)) {
   plan(multisession(workers = 5))
   res[[i]] <- future_lapply(files, obtainHestonMetrics, N = N[i])
   cat("\nDone!\n")
+  saveRDS(res, file = "~/projekt/dumps/res.RData")
 }
 
 conclusion_N <- matrix(nrow = length(files) * 2, ncol = length(N))
@@ -261,3 +256,5 @@ for(i in 1:length(N)) {
   conclusion[[i + 1]] <- temp_df
 }
 conclusion
+saveRDS(conclusion, file = "~/projekt/dumps/conclusion_realpart_6monthstm.RData")
+
