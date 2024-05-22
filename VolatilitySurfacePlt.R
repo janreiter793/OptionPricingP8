@@ -7,12 +7,11 @@ library(quantmod)
 library(plotly)
 
 # Parameters
-address         <- ".../WebSnapshots_SP500_optionsChains/" # Address for the options chain of SP500
-path.data       <- ".../SP500_data.csv" # Path to data with options
+path.data       <- "~/data/SP500_data.csv" # Path to data with options
 load.from.file <- TRUE # If true, then data is loaded from path.data. If false, then
                         # data is downloaded from polygon.io for each symbol in address.
                         # Note, if true, then address parameter is unused.
-KEY                 <- "JGWTBya3mqdbU16w43ImnqjPMP7AjrOt"
+KEY                 <- "[polygon.io key here]" # Optional - wont be used if load.from.file is TRUE
 
 # Converts a date format YYMMDD to 20YY-MM-DD.
 convertToDate <- function(string) {
@@ -69,9 +68,9 @@ if(load.from.file) {
 
   # Find data for each call symbol
   #data <- data.frame()
-  i <- 262
+  i <- 1
   n <- optionsChain %>% length
-  for(symbol in optionsChain[262:n]) {
+  for(symbol in optionsChain[1:n]) {
     print(paste("Downloading data for:",
                 symbol,
                 paste0("(", i, "/", n, ")")
@@ -151,27 +150,27 @@ for(i in 1:nrow(subset_data)) {
   },
   error = function(e) {})
 }
-subset_data
+
 subset_data %<>%
   cbind(IV) %>%
   filter(IV != 0) %>%
-  select(strike.price,
-         TTM = time.to.maturity.in.minutes,
-         IV) %>%
-  mutate(TTM = TTM / MINUTES_PR_YEAR)
+  mutate(TTM = time.to.maturity.in.minutes / MINUTES_PR_YEAR,
+         moneyness = SPX.Adjusted / strike.price)
 
 # Plot the implied volatility surface
-fig <- plot_ly(subset_data, x = ~strike.price, y = ~TTM, z = ~IV,
+subset_data %>%
+  select(strike.price,
+         TTM,
+         IV,) %>%
+  plot_ly(x = ~strike.price, y = ~TTM, z = ~IV,
                type = "scatter3d",
-               color = ~IV)
-fig
+               color = ~IV,
+               marker = list(size = 2))
 
-strike.price <- c(0, 6, 6, 0)
-TTM <- c(12000, 12000, 0, 0)
-hist.volatility <- outer(strike.price, TTM,
-                         function(strike.price, TTM) {
-                           rep(sd(SPX$SPX.Adjusted), length(strike.price))
-                          })
-
-plot_ly(x = ~strike.price, y = ~TTM, z = ~hist.volatility) %>%
-  add_surface()
+subset_data %>%
+  filter(TTM >= 0 & TTM <= 0.01) %>%
+  mutate(log.moneyness = log(moneyness)) %>%
+  plot_ly(x = ~log.moneyness, y = ~TTM, z = ~IV,
+          type = "scatter3d",
+          color = ~IV,
+          marker = list(size = 2))
